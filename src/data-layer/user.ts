@@ -7,10 +7,9 @@ import {
   UnknownError,
   isError,
 } from '../errors.js';
+import { config } from '../config.js';
 
-if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
-
-const sql = postgres(process.env.DATABASE_URL);
+const sql = postgres(config.DATABASE_URL);
 const BCRYPT_PASSWORD_SALT_ROUNDS = 12;
 
 export async function createUser(newUser: unknown) {

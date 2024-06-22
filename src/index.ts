@@ -6,8 +6,9 @@ import {
   UnknownError,
 } from './errors.js';
 import { ZodError } from 'zod';
+import { config } from './config.js';
 
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = config.PORT || 3000;
 const app = fastify({ logger: true });
 
 app.get('/', (_, res) => {
