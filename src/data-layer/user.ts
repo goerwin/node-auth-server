@@ -10,18 +10,19 @@ import {
 import { config } from '../config.js';
 
 const sql = postgres(config.DATABASE_URL);
-const BCRYPT_PASSWORD_SALT_ROUNDS = 12;
+const BCRYPT_SALT_ROUNDS = 12;
 
 export async function createUser<T = NewUser>(newUser: T) {
   try {
     const parsedNewUser = await NewUser.parseAsync(newUser);
+    const hashedPassword = await bcrypt.hash(
+      parsedNewUser.password,
+      BCRYPT_SALT_ROUNDS,
+    );
 
     const resp = await sql`INSERT INTO users ${sql({
       ...parsedNewUser,
-      password: await bcrypt.hash(
-        parsedNewUser.password,
-        BCRYPT_PASSWORD_SALT_ROUNDS
-      ),
+      password: hashedPassword,
     })} RETURNING *`;
 
     return UserResponse.parse(resp[0]);
