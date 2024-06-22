@@ -12,7 +12,7 @@ import { config } from '../config.js';
 const sql = postgres(config.DATABASE_URL);
 const BCRYPT_PASSWORD_SALT_ROUNDS = 12;
 
-export async function createUser(newUser: unknown) {
+export async function createUser<T = NewUser>(newUser: T) {
   try {
     const parsedNewUser = await NewUser.parseAsync(newUser);
 
@@ -32,7 +32,7 @@ export async function createUser(newUser: unknown) {
   }
 }
 
-export async function loginUser(input: unknown) {
+export async function loginUser<T = LoginInput>(input: T) {
   try {
     const parsedInput = LoginInput.parse(input);
 

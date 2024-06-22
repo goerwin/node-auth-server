@@ -35,3 +35,5 @@ export const LoginInput = zod.object({
   email: NewUser.shape.email,
   password: NewUser.shape.password,
 });
+
+export type LoginInput = zod.infer<typeof LoginInput>;
