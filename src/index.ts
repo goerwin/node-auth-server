@@ -1,12 +1,13 @@
 import fastify from 'fastify';
+import jwt from 'jsonwebtoken';
+import { ZodError } from 'zod';
+import { config } from './config.js';
 import { createUser, loginUser } from './data-layer/user.js';
 import {
   EmailUniqueError,
   InvalidCredentialsError,
   UnknownError,
 } from './errors.js';
-import { ZodError } from 'zod';
-import { config } from './config.js';
 
 const PORT = config.PORT || 3000;
 const app = fastify({ logger: true });
@@ -17,9 +18,10 @@ app.get('/', (_, res) => {
 
 app.post('/register', async (req, res) => {
   try {
-    const newUser = await createUser(req.body);
+    const user = await createUser(req.body);
+    const token = jwt.sign(user, config.JWT_SECRET, { expiresIn: '7d' });
 
-    res.send(newUser);
+    res.send({ ...user, token });
   } catch (error) {
     if (error instanceof EmailUniqueError)
       return res.status(500).send(new EmailUniqueError());
@@ -33,8 +35,10 @@ app.post('/register', async (req, res) => {
 
 app.post('/login', async (req, res) => {
   try {
-    const resp = await loginUser(req.body);
-    res.send(resp);
+    const user = await loginUser(req.body);
+    const token = jwt.sign(user, config.JWT_SECRET, { expiresIn: '7d' });
+
+    res.send({ ...user, token });
   } catch (error) {
     console.error(error);
 

@@ -1,13 +1,13 @@
-import postgres from 'postgres';
-import { LoginInput, NewUser, UserResponse } from './schemas.js';
 import bcrypt from 'bcrypt';
+import postgres from 'postgres';
+import { config } from '../config.js';
 import {
   EmailUniqueError,
   InvalidCredentialsError,
   UnknownError,
   isError,
 } from '../errors.js';
-import { config } from '../config.js';
+import { LoginInput, NewUser, UserResponse } from './schemas.js';
 
 const sql = postgres(config.DATABASE_URL);
 const BCRYPT_SALT_ROUNDS = 12;
