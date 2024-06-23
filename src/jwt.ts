@@ -1,0 +1,22 @@
+import { TextEncoder } from 'node:util';
+import { SignJWT, jwtVerify } from 'jose';
+import { config } from './config.js';
+import { tryAsync } from './utils.js';
+
+const secretKey = new TextEncoder().encode(config.JWT_SECRET);
+
+const HASHING_ALGORITHM = 'HS256';
+
+export async function signJWT(payload: Record<string, string | number>) {
+  return tryAsync(() =>
+    new SignJWT(payload)
+      .setProtectedHeader({ alg: HASHING_ALGORITHM })
+      .setIssuedAt()
+      .setExpirationTime('7d')
+      .sign(secretKey),
+  );
+}
+
+export async function verifyJWT(jwt: string) {
+  return tryAsync(() => jwtVerify(jwt, secretKey));
+}

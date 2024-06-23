@@ -1,57 +1,76 @@
+import fastifyCookie from '@fastify/cookie';
 import fastify from 'fastify';
-import jwt from 'jsonwebtoken';
 import { ZodError } from 'zod';
 import { config } from './config.js';
 import { createUser, loginUser } from './data-layer/user.js';
 import {
   EmailUniqueError,
   InvalidCredentialsError,
+  InvalidTokenError,
+  NoTokenError,
   UnknownError,
 } from './errors.js';
+import { signJWT, verifyJWT } from './jwt.js';
+import { UserResponse } from './utils.js';
 
 const PORT = config.PORT || 3000;
 const app = fastify({ logger: true });
+
+// biome-ignore lint/suspicious/noExplicitAny: kind of hard to infer the res type
+function sendUserAndCookie(res: any, user: UserResponse, token: string) {
+  res.setCookie('token', token, { httpOnly: true }).send(user);
+}
+
+app.register(fastifyCookie, { secret: config.COOKIE_SECRET });
 
 app.get('/', (_, res) => {
   res.send({ hello: 'world' });
 });
 
 app.post('/register', async (req, res) => {
-  try {
-    const user = await createUser(req.body);
-    const token = jwt.sign(user, config.JWT_SECRET, { expiresIn: '7d' });
+  const [error, user] = await createUser(req.body);
 
-    res.send({ ...user, token });
-  } catch (error) {
-    if (error instanceof EmailUniqueError)
-      return res.status(500).send(new EmailUniqueError());
+  if (error instanceof EmailUniqueError) return res.status(500).send(new EmailUniqueError());
+  if (error instanceof ZodError) return res.status(500).send(error.errors);
+  if (error) return res.status(500).send(new UnknownError());
 
-    if (error instanceof ZodError) return res.status(500).send(error.errors);
+  const [tokenError, token] = await signJWT(user);
 
-    console.error(error);
-    res.status(500).send(new UnknownError());
-  }
+  if (tokenError) return res.status(500).send(new UnknownError());
+
+  res.setCookie('token', token, { httpOnly: true }).send(user);
 });
 
 app.post('/login', async (req, res) => {
-  try {
-    const user = await loginUser(req.body);
-    const token = jwt.sign(user, config.JWT_SECRET, { expiresIn: '7d' });
+  const [error, user] = await loginUser(req.body);
 
-    res.send({ ...user, token });
-  } catch (error) {
-    console.error(error);
+  if (error instanceof InvalidCredentialsError)
+    return res.status(500).send(new InvalidCredentialsError());
 
-    if (error instanceof EmailUniqueError)
-      return res.status(500).send(new EmailUniqueError());
+  if (error instanceof ZodError) return res.status(500).send(error.errors);
+  if (error) return res.status(500).send(new UnknownError());
 
-    if (error instanceof InvalidCredentialsError)
-      return res.status(401).send(new InvalidCredentialsError());
+  const [signError, token] = await signJWT(user);
 
-    if (error instanceof ZodError) return res.status(500).send(error.errors);
+  if (signError) return res.status(500).send(new UnknownError());
 
-    res.status(500).send(new UnknownError());
-  }
+  sendUserAndCookie(res, user, token);
+});
+
+app.post('/verify', async (req, res) => {
+  const { token } = req.cookies;
+
+  if (!token) return res.status(401).send(new NoTokenError());
+
+  const [error, data] = await verifyJWT(token);
+
+  if (error) return res.status(401).send(new InvalidTokenError());
+
+  const { error: payloadError, data: user } = UserResponse.safeParse(data.payload);
+
+  if (payloadError) return res.status(401).send(new InvalidTokenError());
+
+  sendUserAndCookie(res, user, token);
 });
 
 try {

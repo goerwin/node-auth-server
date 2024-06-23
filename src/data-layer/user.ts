@@ -1,53 +1,58 @@
 import argon2 from 'argon2';
 import postgres from 'postgres';
+import zod from 'zod';
 import { config } from '../config.js';
-import {
-  EmailUniqueError,
-  InvalidCredentialsError,
-  UnknownError,
-  isError,
-} from '../errors.js';
-import { LoginInput, NewUser, UserResponse } from './schemas.js';
+import { EmailUniqueError, InvalidCredentialsError } from '../errors.js';
+import { UserResponse, tryAsync } from '../utils.js';
+import { LoginInput, NewUser } from './schemas.js';
 
 const sql = postgres(config.DATABASE_URL);
 
-export async function createUser<T = NewUser>(newUser: T) {
-  try {
-    const parsedNewUser = await NewUser.parseAsync(newUser);
-    const hashedPassword = await argon2.hash(parsedNewUser.password);
+export async function createUser<T = NewUser>(newUser: T): Promise<[Error] | [null, UserResponse]> {
+  const { error, data: parsedNewUser } = await NewUser.safeParseAsync(newUser);
 
-    const resp = await sql`INSERT INTO users ${sql({
-      ...parsedNewUser,
-      password: hashedPassword,
-    })} RETURNING *`;
+  if (error) return [error];
 
-    return UserResponse.parse(resp[0]);
-  } catch (error) {
-    if (!isError(error)) throw new UnknownError();
-    if (error.message.includes('email_unique')) throw new EmailUniqueError();
-    throw error;
-  }
+  const [hashError, hashedPassword] = await tryAsync(() => argon2.hash(parsedNewUser.password));
+
+  if (hashError) return [hashError];
+
+  const [sqlError, resp] = await tryAsync(
+    () =>
+      sql`INSERT INTO users ${sql({
+        ...parsedNewUser,
+        password: hashedPassword,
+      })} RETURNING *`,
+  );
+
+  if (sqlError?.message.includes('email_unique')) return [new EmailUniqueError()];
+  if (sqlError) return [sqlError];
+
+  const { error: userParseError, data } = UserResponse.safeParse(resp[0]);
+
+  if (userParseError) return [userParseError];
+  return [null, data];
 }
 
-export async function loginUser<T = LoginInput>(input: T) {
-  try {
-    const parsedInput = LoginInput.parse(input);
+export async function loginUser<T = LoginInput>(input: T): Promise<[Error] | [null, UserResponse]> {
+  const parsedInput = LoginInput.parse(input);
 
-    const resp =
-      await sql`SELECT * FROM users WHERE email = ${parsedInput.email}`;
+  const [error, resp] = await tryAsync(
+    () => sql`SELECT * FROM users WHERE email = ${parsedInput.email}`,
+  );
 
-    if (!resp[0]) throw new InvalidCredentialsError();
+  if (error) return [error];
+  if (!resp[0]) return [new InvalidCredentialsError()];
 
-    const user = UserResponse.extend({
-      password: NewUser.shape.password,
-    }).parse(resp[0]);
+  const { error: zodError, data: user } = UserResponse.extend({
+    password: zod.string(),
+  }).safeParse(resp[0]);
 
-    if (await argon2.verify(user.password, parsedInput.password))
-      return UserResponse.parse(user);
+  if (zodError) return [zodError];
 
-    throw new InvalidCredentialsError();
-  } catch (error) {
-    if (!isError(error)) throw new UnknownError();
-    throw error;
-  }
+  const isPasswordValid = await argon2.verify(user.password, parsedInput.password);
+
+  if (!isPasswordValid) return [new InvalidCredentialsError()];
+
+  return [null, UserResponse.parse(user)];
 }

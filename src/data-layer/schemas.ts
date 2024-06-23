@@ -23,14 +23,6 @@ export const NewUser = zod.object({
 
 export type NewUser = zod.infer<typeof NewUser>;
 
-export const UserResponse = zod.object({
-  id: zod.number(),
-  name: NewUser.shape.name,
-  email: NewUser.shape.email,
-});
-
-export type UserResponse = zod.infer<typeof UserResponse>;
-
 export const LoginInput = zod.object({
   email: NewUser.shape.email,
   password: NewUser.shape.password,
