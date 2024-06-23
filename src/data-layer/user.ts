@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import argon2 from 'argon2';
 import postgres from 'postgres';
 import { config } from '../config.js';
 import {
@@ -10,15 +10,11 @@ import {
 import { LoginInput, NewUser, UserResponse } from './schemas.js';
 
 const sql = postgres(config.DATABASE_URL);
-const BCRYPT_SALT_ROUNDS = 12;
 
 export async function createUser<T = NewUser>(newUser: T) {
   try {
     const parsedNewUser = await NewUser.parseAsync(newUser);
-    const hashedPassword = await bcrypt.hash(
-      parsedNewUser.password,
-      BCRYPT_SALT_ROUNDS,
-    );
+    const hashedPassword = await argon2.hash(parsedNewUser.password);
 
     const resp = await sql`INSERT INTO users ${sql({
       ...parsedNewUser,
@@ -46,7 +42,7 @@ export async function loginUser<T = LoginInput>(input: T) {
       password: NewUser.shape.password,
     }).parse(resp[0]);
 
-    if (await bcrypt.compare(parsedInput.password, user.password))
+    if (await argon2.verify(user.password, parsedInput.password))
       return UserResponse.parse(user);
 
     throw new InvalidCredentialsError();

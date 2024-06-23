@@ -18,3 +18,12 @@ content-type: application/json
   "email": "test@test.com",
   "password": "Aa45$6aa"
 }
+
+### Login invalid user
+POST http://localhost:3000/login HTTP/1.1
+content-type: application/json
+
+{
+  "email": "test@test.com",
+  "password": "Aa45$6ab"
+}

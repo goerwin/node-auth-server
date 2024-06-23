@@ -13,7 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "bcrypt": "^5.1.1",
+    "argon2": "^0.40.3",
     "fastify": "^4.28.0",
     "jsonwebtoken": "^9.0.2",
     "postgres": "^3.4.4",
@@ -21,7 +21,6 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.8.2",
-    "@types/bcrypt": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.14.7",
     "tsx": "^4.15.7",
