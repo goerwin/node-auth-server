@@ -35,7 +35,9 @@ export async function createUser<T = NewUser>(newUser: T): Promise<[Error] | [nu
 }
 
 export async function loginUser<T = LoginInput>(input: T): Promise<[Error] | [null, UserResponse]> {
-  const parsedInput = LoginInput.parse(input);
+  const { error: parseError, data: parsedInput } = LoginInput.safeParse(input);
+
+  if (parseError) return [parseError];
 
   const [error, resp] = await tryAsync(
     () => sql`SELECT * FROM users WHERE email = ${parsedInput.email}`,

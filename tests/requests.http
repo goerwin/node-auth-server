@@ -27,3 +27,17 @@ content-type: application/json
   "email": "test@test.com",
   "password": "Aa45$6ab"
 }
+
+### Verify user if cookie set
+POST http://localhost:3000/verify HTTP/1.1
+content-type: application/json
+
+{}
+
+### Verify user with bad cookie
+# @no-cookie-jar
+POST http://localhost:3000/verify HTTP/1.1
+content-type: application/json
+Cookie: token=badCookie
+
+{}
