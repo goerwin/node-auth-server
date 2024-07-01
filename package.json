@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx --watch --inspect --env-file .env src/index.ts",
-    "format-check": "biome check",
-    "format-write": "biome format --write .",
+    "format-link-check": "biome check",
+    "format-lint-write": "biome format --write .",
     "test": "npm run format-check && echo 'No tests'"
   },
   "author": "",
