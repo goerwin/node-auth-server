@@ -32,21 +32,21 @@ app.get('/', (_, res) => {
   res.send({ hello: 'world' });
 });
 
-app.post('/register', async (req, res) => {
+app.post('/signup', async (req, res) => {
   const [error, user] = await createUser(req.body);
 
   if (error instanceof EmailUniqueError) return res.status(500).send(new EmailUniqueError());
   if (error instanceof ZodError) return res.status(500).send(error.errors);
-  if (error) return res.status(500).send(new UnknownError());
+  if (error) return res.status(500).send(new UnknownError(error));
 
   const [tokenError, token] = await signJWT(user);
 
-  if (tokenError) return res.status(500).send(new UnknownError());
+  if (tokenError) return res.status(500).send(new UnknownError(tokenError));
 
   res.setCookie('token', token, { httpOnly: true }).send(user);
 });
 
-app.post('/login', async (req, res) => {
+app.post('/signin', async (req, res) => {
   const [error, user] = await loginUser(req.body);
 
   if (error instanceof ZodError) return res.status(500).send(error.errors);

@@ -4,12 +4,14 @@ import zod from 'zod';
 import { config } from '../config.js';
 import { EmailUniqueError, InvalidCredentialsError } from '../errors.js';
 import { UserResponse, tryAsync } from '../utils.js';
-import { LoginInput, NewUser } from './schemas.js';
+import { LoginUser, SignupUser } from './schemas.js';
 
 const sql = postgres(config.DATABASE_URL);
 
-export async function createUser<T = NewUser>(newUser: T): Promise<[Error] | [null, UserResponse]> {
-  const { error, data: parsedNewUser } = await NewUser.safeParseAsync(newUser);
+export async function createUser<T = SignupUser>(
+  newUser: T,
+): Promise<[Error] | [null, UserResponse]> {
+  const { error, data: parsedNewUser } = await SignupUser.safeParseAsync(newUser);
 
   if (error) return [error];
 
@@ -34,8 +36,8 @@ export async function createUser<T = NewUser>(newUser: T): Promise<[Error] | [nu
   return [null, data];
 }
 
-export async function loginUser<T = LoginInput>(input: T): Promise<[Error] | [null, UserResponse]> {
-  const { error: parseError, data: parsedInput } = LoginInput.safeParse(input);
+export async function loginUser<T = LoginUser>(input: T): Promise<[Error] | [null, UserResponse]> {
+  const { error: parseError, data: parsedInput } = LoginUser.safeParse(input);
 
   if (parseError) return [parseError];
 

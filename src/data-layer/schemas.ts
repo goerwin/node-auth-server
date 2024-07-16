@@ -1,6 +1,6 @@
 import zod from 'zod';
 
-export const NewUser = zod.object({
+export const SignupUser = zod.object({
   name: zod.string().trim().min(3),
   email: zod.string().email().trim(),
   password: zod
@@ -21,11 +21,11 @@ export const NewUser = zod.object({
     }),
 });
 
-export type NewUser = zod.infer<typeof NewUser>;
+export type SignupUser = zod.infer<typeof SignupUser>;
 
-export const LoginInput = zod.object({
-  email: NewUser.shape.email,
-  password: NewUser.shape.password,
+export const LoginUser = zod.object({
+  email: SignupUser.shape.email,
+  password: SignupUser.shape.password,
 });
 
-export type LoginInput = zod.infer<typeof LoginInput>;
+export type LoginUser = zod.infer<typeof LoginUser>;

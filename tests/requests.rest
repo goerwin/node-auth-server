@@ -1,7 +1,7 @@
 GET http://localhost:3000 HTTP/1.1
 
-### register valid user
-POST http://localhost:3000/register HTTP/1.1
+### Signup valid user
+POST http://localhost:3000/signup HTTP/1.1
 content-type: application/json
 
 {
@@ -10,8 +10,8 @@ content-type: application/json
   "password": "Aa45$6aa"
 }
 
-### Login valid user
-POST http://localhost:3000/login HTTP/1.1
+### Signin valid user
+POST http://localhost:3000/signin HTTP/1.1
 content-type: application/json
 
 {
@@ -19,8 +19,8 @@ content-type: application/json
   "password": "Aa45$6aa"
 }
 
-### Login invalid user
-POST http://localhost:3000/login HTTP/1.1
+### Signin invalid user
+POST http://localhost:3000/signin HTTP/1.1
 content-type: application/json
 
 {
