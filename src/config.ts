@@ -2,7 +2,7 @@ import zod from 'zod';
 
 export const config = zod
   .object({
-    PORT: zod.coerce.number().optional(),
+    PORT: zod.coerce.number().default(3000),
     DATABASE_URL: zod.string(),
     JWT_SECRET: zod.string().min(32),
     COOKIE_SECRET: zod.string().min(8),

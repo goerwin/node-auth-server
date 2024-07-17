@@ -1,15 +1,13 @@
 import argon2 from 'argon2';
-import postgres from 'postgres';
+import type postgres from 'postgres';
 import zod from 'zod';
-import { config } from '../config.js';
 import { EmailUniqueError, InvalidCredentialsError } from '../errors.js';
 import { UserResponse, tryAsync } from '../utils.js';
 import { LoginUser, SignupUser } from './schemas.js';
 
-const sql = postgres(config.DATABASE_URL);
-
 export async function createUser<T = SignupUser>(
   newUser: T,
+  dbInstance: postgres.Sql,
 ): Promise<[Error] | [null, UserResponse]> {
   const { error, data: parsedNewUser } = await SignupUser.safeParseAsync(newUser);
 
@@ -21,7 +19,7 @@ export async function createUser<T = SignupUser>(
 
   const [sqlError, resp] = await tryAsync(
     () =>
-      sql`INSERT INTO users ${sql({
+      dbInstance`INSERT INTO users ${dbInstance({
         ...parsedNewUser,
         password: hashedPassword,
       })} RETURNING *`,
@@ -36,13 +34,16 @@ export async function createUser<T = SignupUser>(
   return [null, data];
 }
 
-export async function loginUser<T = LoginUser>(input: T): Promise<[Error] | [null, UserResponse]> {
+export async function loginUser<T = LoginUser>(
+  input: T,
+  dbInstance: postgres.Sql,
+): Promise<[Error] | [null, UserResponse]> {
   const { error: parseError, data: parsedInput } = LoginUser.safeParse(input);
 
   if (parseError) return [parseError];
 
   const [error, resp] = await tryAsync(
-    () => sql`SELECT * FROM users WHERE email = ${parsedInput.email}`,
+    () => dbInstance`SELECT * FROM users WHERE email = ${parsedInput.email}`,
   );
 
   if (error) return [error];
