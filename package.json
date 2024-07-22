@@ -4,7 +4,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx --watch --inspect --env-file .env src/index.ts",
+    "start": "tsx --env-file .env src/index.ts",
+    "dev": "tsx --watch --env-file .env src/index.ts",
     "format-lint-check": "biome check",
     "format-lint-write": "biome format --write .",
     "test": "npm run format-lint-check && echo 'No tests'"
