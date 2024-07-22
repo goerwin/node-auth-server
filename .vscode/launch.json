@@ -9,6 +9,7 @@
       "name": "npm start",
       "request": "launch",
       "command": "npm start",
+      "internalConsoleOptions": "openOnSessionStart",
       "skipFiles": ["**/node_modules/**", "<node_internals>/**"]
     }
   ]
