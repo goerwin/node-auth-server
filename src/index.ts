@@ -1,7 +1,7 @@
 import fastifyCookie from '@fastify/cookie';
 import fastify from 'fastify';
 import { ZodError } from 'zod';
-import { config } from './config.js';
+import { env } from './env.js';
 import { getDBInstance } from './data-layer/db.js';
 import { createUser, loginUser } from './data-layer/user.js';
 import {
@@ -103,7 +103,7 @@ export async function createApp({
 }
 
 createApp({
-  port: config.PORT,
-  cookieSecret: config.COOKIE_SECRET,
-  databaseUrl: config.DATABASE_URL,
+  port: env.PORT,
+  cookieSecret: env.COOKIE_SECRET,
+  databaseUrl: env.DATABASE_URL,
 });

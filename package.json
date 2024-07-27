@@ -6,9 +6,11 @@
   "scripts": {
     "start": "tsx --env-file .env src/index.ts",
     "dev": "tsx --watch --env-file .env src/index.ts",
-    "format-lint-check": "biome check",
-    "format-lint-write": "biome format --write .",
-    "test": "npm run format-lint-check && echo 'No tests'"
+    "format": "biome format",
+    "format-fix": "biome format --write",
+    "lint": "biome lint",
+    "lint-fix": "biome lint --write",
+    "test": "npm run format && npm run lint && echo 'No tests'"
   },
   "author": "",
   "license": "ISC",

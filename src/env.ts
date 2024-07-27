@@ -1,6 +1,6 @@
 import zod from 'zod';
 
-export const config = zod
+export const env = zod
   .object({
     PORT: zod.coerce.number().default(3000),
     DATABASE_URL: zod.string(),

@@ -1,9 +1,9 @@
 import { TextEncoder } from 'node:util';
 import { SignJWT, jwtVerify } from 'jose';
-import { config } from './config.js';
+import { env } from './env.js';
 import { tryAsync } from './utils.js';
 
-const secretKey = new TextEncoder().encode(config.JWT_SECRET);
+const secretKey = new TextEncoder().encode(env.JWT_SECRET);
 
 const HASHING_ALGORITHM = 'HS256';
 
